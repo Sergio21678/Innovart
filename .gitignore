@@ -1,0 +1,11 @@
+# Ignorar dependencias de Node (Frontend)
+node_modules/
+build/
+dist/
+.env
+
+# Ignorar basura de .NET (Backend)
+bin/
+obj/
+.vs/
+*.user

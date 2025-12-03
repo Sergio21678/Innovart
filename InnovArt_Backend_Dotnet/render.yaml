@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: innovart-backend
+    env: dotnet
+    buildCommand: dotnet publish -c Release -o ./publish
+    startCommand: cd ./publish && dotnet InnovArt.Backend.dll --urls "http://0.0.0.0:${PORT}"
+    plan: free
+    envVars:
+      - key: CONNECTION_STRING
+        value: "${{innovart-db.CONNECTION_STRING}}"
+      - key: JWT_SECRET
+        value: "change_this_secret_for_production_use_strong_random_value"
+      - key: ENABLE_SWAGGER
+        value: "true"
+      - key: FRONTEND_URL
+        value: "https://your-frontend-url.onrender.com"
+  - type: postgres
+    name: innovart-db
+    plan: free
