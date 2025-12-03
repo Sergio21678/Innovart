@@ -55,7 +55,7 @@ function ContenidoProductos() {
     if (storedUser) {
       try {
         const parsed = JSON.parse(storedUser);
-        const normalizedRole = (parsed.role || parsed.rol || '').toString().toLowerCase() || null;
+        const normalizedRole = (parsed.role || parsed.rol || '').toString().trim().toLowerCase() || null;
         setRole(normalizedRole);
       } catch { setRole(null); }
     }
@@ -63,7 +63,7 @@ function ContenidoProductos() {
     if (token) {
       axios.get(`${API_URL}/users/me`, { headers: { Authorization: `Bearer ${token}` } })
         .then(res => {
-          const normalizedRole = (res.data.role ?? res.data.rol ?? '').toString().toLowerCase() || null;
+          const normalizedRole = (res.data.role ?? res.data.rol ?? '').toString().trim().toLowerCase() || null;
           setRole(normalizedRole);
           localStorage.setItem('user', JSON.stringify({
             id: res.data.id ?? res.data.Id,
@@ -79,7 +79,7 @@ function ContenidoProductos() {
       if (updated) {
         try {
           const parsed = JSON.parse(updated);
-          const normalizedRole = (parsed.role || parsed.rol || '').toString().toLowerCase() || null;
+          const normalizedRole = (parsed.role || parsed.rol || '').toString().trim().toLowerCase() || null;
           setRole(normalizedRole);
         } catch { setRole(null); }
       } else {
@@ -106,7 +106,7 @@ function ContenidoProductos() {
           <h2 className="text-3xl font-bold text-blue-900 flex items-center gap-3 justify-center sm:justify-start">
             <FaBoxOpen className="text-blue-700" /> Productos disponibles
           </h2>
-          {role && role !== 'cliente' && (
+          {(role === 'artesano' || role === 'admin') && (
             <Link
               href="/productos/crear"
               className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded font-semibold flex items-center gap-2 justify-center w-full sm:w-auto"
