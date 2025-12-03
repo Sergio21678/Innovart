@@ -1,6 +1,7 @@
 using InnovArt_Backend_Dotnet.Domain.Entities;
 using InnovArt_Backend_Dotnet.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ public class PedidoService : IPedidoService
 
     public async Task<Pedido> CreateAsync(Pedido pedido)
     {
+        ValidateStatus(pedido.Status);
         await _uow.Repository<Pedido>().AddAsync(pedido);
         await _uow.SaveChangesAsync();
         return pedido;
@@ -42,9 +44,18 @@ public class PedidoService : IPedidoService
     {
         var item = await _uow.Repository<Pedido>().GetByIdAsync(id);
         if (item is null) return false;
+        ValidateStatus(pedido.Status);
         item.Status = pedido.Status;
         _uow.Repository<Pedido>().Update(item);
         await _uow.SaveChangesAsync();
         return true;
+    }
+
+    private static void ValidateStatus(string? status)
+    {
+        if (string.IsNullOrWhiteSpace(status)) return;
+        var s = status.Trim().ToLower();
+        if (s != "creado" && s != "procesando" && s != "completado" && s != "cancelado")
+            throw new ArgumentException("Estado inválido. Usa creado, procesando, completado o cancelado");
     }
 }

@@ -82,6 +82,7 @@ builder.Services.AddScoped<InnovArt_Backend_Dotnet.Application.Services.IMensaje
 builder.Services.AddScoped<InnovArt_Backend_Dotnet.Application.Services.IAuthService, InnovArt_Backend_Dotnet.Application.Services.AuthService>();
 builder.Services.AddScoped<InnovArt_Backend_Dotnet.Application.Services.IReportService, InnovArt_Backend_Dotnet.Application.Services.ReportService>();
 builder.Services.AddHttpClient<InnovArt_Backend_Dotnet.Application.Services.IExternalApiService, InnovArt_Backend_Dotnet.Application.Services.ExternalApiService>();
+builder.Services.AddScoped<InnovArt_Backend_Dotnet.Application.Services.IAIService, InnovArt_Backend_Dotnet.Application.Services.AIService>();
 
 // CORS - allow frontend to call API (adjust origins for production)
 builder.Services.AddCors(options =>

@@ -13,37 +13,36 @@ public class ProductService : IProductService
 
     public ProductService(IUnitOfWork uow) => _uow = uow;
 
-    public async Task<Product> CreateAsync(Product product)
+    public async Task<Product> CreateAsync(Product product, string? actorRole = null)
     {
-        await _uow.Repository<Product>().AddAsync(product);
+        if (!IsRoleAllowed(actorRole)) throw new UnauthorizedAccessException("Solo artesanos o admin pueden crear productos");
+        await _uow.Products.AddAsync(product);
         await _uow.SaveChangesAsync();
         return product;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id, string? actorRole = null)
     {
-        var item = await _uow.Repository<Product>().GetByIdAsync(id);
+        if (!IsRoleAllowed(actorRole)) throw new UnauthorizedAccessException("Solo artesanos o admin pueden eliminar productos");
+        var item = await _uow.Products.GetByIdAsync(id);
         if (item is null) return false;
-        _uow.Repository<Product>().Remove(item);
+        _uow.Products.Remove(item);
         await _uow.SaveChangesAsync();
         return true;
     }
 
     public async Task<IEnumerable<Product>> GetAllAsync(int? usuarioId = null)
     {
-        var query = _uow.Repository<Product>().Query();
-        if (usuarioId.HasValue)
-        {
-            query = query.Where(p => p.UsuarioId == usuarioId.Value);
-        }
-        return await query.ToListAsync();
+        if (usuarioId.HasValue) return await _uow.Products.GetByUserAsync(usuarioId.Value);
+        return await _uow.Products.Query().ToListAsync();
     }
 
-    public async Task<Product?> GetByIdAsync(int id) => await _uow.Repository<Product>().GetByIdAsync(id);
+    public async Task<Product?> GetByIdAsync(int id) => await _uow.Products.GetByIdAsync(id);
 
-    public async Task<bool> UpdateAsync(int id, Product product)
+    public async Task<bool> UpdateAsync(int id, Product product, string? actorRole = null)
     {
-        var item = await _uow.Repository<Product>().GetByIdAsync(id);
+        if (!IsRoleAllowed(actorRole)) throw new UnauthorizedAccessException("Solo artesanos o admin pueden actualizar productos");
+        var item = await _uow.Products.GetByIdAsync(id);
         if (item is null) return false;
         item.Title = product.Title;
         item.Description = product.Description;
@@ -51,8 +50,15 @@ public class ProductService : IProductService
         item.Category = product.Category;
         item.Location = product.Location;
         item.ImageUrl = product.ImageUrl;
-        _uow.Repository<Product>().Update(item);
+        _uow.Products.Update(item);
         await _uow.SaveChangesAsync();
         return true;
+    }
+
+    private static bool IsRoleAllowed(string? role)
+    {
+        if (string.IsNullOrWhiteSpace(role)) return false;
+        var r = role.Trim().ToLower();
+        return r == "artesano" || r == "admin";
     }
 }

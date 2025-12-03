@@ -15,6 +15,7 @@ public class ReviewService : IReviewService
 
     public async Task<Review> CreateAsync(Review review)
     {
+        if (review.Rating < 1 || review.Rating > 5) throw new ArgumentException("Rating debe estar entre 1 y 5");
         await _uow.Repository<Review>().AddAsync(review);
         await _uow.SaveChangesAsync();
         return review;

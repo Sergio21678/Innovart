@@ -13,6 +13,8 @@ public class UnitOfWork : IUnitOfWork
     private readonly ApplicationDbContext _db;
     private readonly ConcurrentDictionary<Type, object> _repositories = new();
     private IDbContextTransaction? _transaction;
+    private IProductRepository? _productRepository;
+    private IUserRepository? _userRepository;
 
     public UnitOfWork(ApplicationDbContext db) => _db = db;
 
@@ -26,6 +28,10 @@ public class UnitOfWork : IUnitOfWork
         }
         return (IRepository<T>)_repositories[type]!;
     }
+
+    public IProductRepository Products => _productRepository ??= new ProductRepository(_db);
+
+    public IUserRepository Users => _userRepository ??= new UserRepository(_db);
 
     public Task<int> SaveChangesAsync() => _db.SaveChangesAsync();
 

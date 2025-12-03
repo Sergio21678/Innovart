@@ -61,10 +61,6 @@ public class ProductsController : ControllerBase
 
         try
         {
-            var role = User.FindFirst(ClaimTypes.Role)?.Value?.ToLower() ?? string.Empty;
-            if (role != "artesano" && role != "admin")
-                return Forbid();
-
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var product = new Product 
             { 
@@ -76,8 +72,13 @@ public class ProductsController : ControllerBase
                 ImageUrl = dto.ImageUrl,
                 UsuarioId = dto.UsuarioId > 0 ? dto.UsuarioId : (userIdClaim != null ? int.Parse(userIdClaim) : 0)
             };
-            var created = await _svc.CreateAsync(product);
+            var role = User.FindFirst(ClaimTypes.Role)?.Value;
+            var created = await _svc.CreateAsync(product, role);
             return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
         }
         catch (Exception ex)
         {
@@ -98,10 +99,7 @@ public class ProductsController : ControllerBase
 
         try
         {
-            var role = User.FindFirst(ClaimTypes.Role)?.Value?.ToLower() ?? string.Empty;
-            if (role != "artesano" && role != "admin")
-                return Forbid();
-
+            var role = User.FindFirst(ClaimTypes.Role)?.Value;
             var updated = new Product 
             { 
                 Title = dto.Title, 
@@ -111,8 +109,12 @@ public class ProductsController : ControllerBase
                 Location = dto.Location,
                 ImageUrl = dto.ImageUrl
             };
-            var ok = await _svc.UpdateAsync(id, updated);
+            var ok = await _svc.UpdateAsync(id, updated, role);
             return ok ? NoContent() : NotFound(new { error = "Product not found" });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
         }
         catch (Exception ex)
         {
@@ -130,12 +132,13 @@ public class ProductsController : ControllerBase
 
         try
         {
-            var role = User.FindFirst(ClaimTypes.Role)?.Value?.ToLower() ?? string.Empty;
-            if (role != "artesano" && role != "admin")
-                return Forbid();
-
-            var ok = await _svc.DeleteAsync(id);
+            var role = User.FindFirst(ClaimTypes.Role)?.Value;
+            var ok = await _svc.DeleteAsync(id, role);
             return ok ? NoContent() : NotFound(new { error = "Product not found" });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
         }
         catch (Exception ex)
         {

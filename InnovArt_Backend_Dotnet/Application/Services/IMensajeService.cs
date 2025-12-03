@@ -8,6 +8,7 @@ public interface IMensajeService
 {
     Task<IEnumerable<Mensaje>> GetAllAsync(int? fromUserId = null, int? toUserId = null);
     Task<Mensaje?> GetByIdAsync(int id);
+    Task<Mensaje> SendAsync(int fromUserId, int toUserId, string content);
     Task<Mensaje> CreateAsync(Mensaje mensaje);
     Task<bool> DeleteAsync(int id);
 }

@@ -15,7 +15,7 @@ public class UserService : IUserService
 
     public async Task<User> CreateAsync(User user)
     {
-        await _uow.Repository<User>().AddAsync(user);
+        await _uow.Users.AddAsync(user);
         await _uow.SaveChangesAsync();
         return user;
     }
@@ -30,7 +30,7 @@ public class UserService : IUserService
 
             var hashed = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             var user = new User { Email = dto.Email, Name = dto.Name, PasswordHash = hashed, Role = role };
-            await _uow.Repository<User>().AddAsync(user);
+            await _uow.Users.AddAsync(user);
             await _uow.SaveChangesAsync();
             await _uow.CommitAsync();
             return user;
@@ -51,28 +51,26 @@ public class UserService : IUserService
 
     public async Task<bool> DeleteAsync(int id)
     {
-        var item = await _uow.Repository<User>().GetByIdAsync(id);
+        var item = await _uow.Users.GetByIdAsync(id);
         if (item is null) return false;
-        _uow.Repository<User>().Remove(item);
+        _uow.Users.Remove(item);
         await _uow.SaveChangesAsync();
         return true;
     }
 
-    public async Task<IEnumerable<User>> GetAllAsync() => await _uow.Repository<User>().Query().ToListAsync();
+    public async Task<IEnumerable<User>> GetAllAsync() => await _uow.Users.Query().ToListAsync();
 
-    public async Task<User?> GetByIdAsync(int id) => await _uow.Repository<User>().GetByIdAsync(id);
+    public async Task<User?> GetByIdAsync(int id) => await _uow.Users.GetByIdAsync(id);
 
     public async Task<User?> GetByEmailAsync(string email)
     {
         var normalized = email.Trim().ToLower();
-        return await _uow.Repository<User>()
-            .Query()
-            .FirstOrDefaultAsync(u => u.Email != null && u.Email.ToLower() == normalized);
+        return await _uow.Users.GetByEmailNormalizedAsync(normalized);
     }
 
     public async Task<bool> UpdateAsync(int id, User user)
     {
-        var item = await _uow.Repository<User>().GetByIdAsync(id);
+        var item = await _uow.Users.GetByIdAsync(id);
         if (item is null) return false;
         item.Name = user.Name;
         item.Email = user.Email;
@@ -83,7 +81,7 @@ public class UserService : IUserService
         item.Pais = user.Pais;
         item.Descripcion = user.Descripcion;
         item.FotoPerfil = user.FotoPerfil;
-        _uow.Repository<User>().Update(item);
+        _uow.Users.Update(item);
         await _uow.SaveChangesAsync();
         return true;
     }

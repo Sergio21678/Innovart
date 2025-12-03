@@ -56,9 +56,12 @@ public class MensajesController : ControllerBase
 
         try
         {
-            var mensaje = new Mensaje { FromUserId = dto.FromUserId, ToUserId = dto.ToUserId, Content = dto.Content };
-            var created = await _svc.CreateAsync(mensaje);
+            var created = await _svc.SendAsync(dto.FromUserId, dto.ToUserId, dto.Content);
             return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
         }
         catch (Exception ex)
         {
