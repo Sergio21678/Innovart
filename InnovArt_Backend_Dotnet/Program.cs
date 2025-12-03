@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using InnovArt_Backend_Dotnet.Infrastructure.Data;
 using FluentValidation.AspNetCore;
 using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +42,19 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<InnovArt_Backend_Dotnet.Application.Validators.ProductCreateValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<InnovArt_Backend_Dotnet.Application.Validators.RegisterValidator>();
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var errors = context.ModelState
+            .Where(x => x.Value?.Errors.Count > 0)
+            .ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+
+        return new BadRequestObjectResult(new { error = "Validation failed", details = errors });
+    };
+});
 
 // Configure EF Core with SQLite (file database) or Postgres via CONNECTION_STRING env var
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
@@ -65,6 +80,8 @@ builder.Services.AddScoped<InnovArt_Backend_Dotnet.Application.Services.IReviewS
 builder.Services.AddScoped<InnovArt_Backend_Dotnet.Application.Services.IPedidoService, InnovArt_Backend_Dotnet.Application.Services.PedidoService>();
 builder.Services.AddScoped<InnovArt_Backend_Dotnet.Application.Services.IMensajeService, InnovArt_Backend_Dotnet.Application.Services.MensajeService>();
 builder.Services.AddScoped<InnovArt_Backend_Dotnet.Application.Services.IAuthService, InnovArt_Backend_Dotnet.Application.Services.AuthService>();
+builder.Services.AddScoped<InnovArt_Backend_Dotnet.Application.Services.IReportService, InnovArt_Backend_Dotnet.Application.Services.ReportService>();
+builder.Services.AddHttpClient<InnovArt_Backend_Dotnet.Application.Services.IExternalApiService, InnovArt_Backend_Dotnet.Application.Services.ExternalApiService>();
 
 // CORS - allow frontend to call API (adjust origins for production)
 builder.Services.AddCors(options =>
@@ -117,7 +134,8 @@ if (enableSwagger)
     app.UseSwaggerUI();
 }
 
-// Global error handling middleware registration (should be early in pipeline)
+// Request logging and error handling
+app.UseMiddleware<InnovArt_Backend_Dotnet.Middlewares.RequestLoggingMiddleware>();
 app.UseMiddleware<InnovArt_Backend_Dotnet.Middlewares.ErrorHandlingMiddleware>();
 
 // CORS must be before UseHttpsRedirection, UseAuthentication and UseAuthorization

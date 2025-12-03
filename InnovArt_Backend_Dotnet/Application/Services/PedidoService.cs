@@ -1,5 +1,6 @@
 using InnovArt_Backend_Dotnet.Domain.Entities;
 using InnovArt_Backend_Dotnet.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,9 +31,9 @@ public class PedidoService : IPedidoService
 
     public async Task<IEnumerable<Pedido>> GetAllAsync(int? userId = null)
     {
-        var all = (await _uow.Repository<Pedido>().GetAllAsync()).ToList();
-        if (userId.HasValue) all = all.Where(p => p.UserId == userId.Value).ToList();
-        return all;
+        var query = _uow.Repository<Pedido>().Query();
+        if (userId.HasValue) query = query.Where(p => p.UserId == userId.Value);
+        return await query.ToListAsync();
     }
 
     public async Task<Pedido?> GetByIdAsync(int id) => await _uow.Repository<Pedido>().GetByIdAsync(id);

@@ -1,6 +1,7 @@
 using InnovArt_Backend_Dotnet.Application.Services;
 using InnovArt_Backend_Dotnet.Domain.Entities;
 using InnovArt_Backend_Dotnet.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -21,13 +22,24 @@ public class UserService : IUserService
 
     public async Task<User> RegisterAsync(InnovArt_Backend_Dotnet.Application.DTOs.RegisterDto dto, string role = "user")
     {
-        var existing = await GetByEmailAsync(dto.Email);
-        if (existing is not null) throw new InvalidOperationException("Email already registered");
-        var hashed = BCrypt.Net.BCrypt.HashPassword(dto.Password);
-        var user = new User { Email = dto.Email, Name = dto.Name, PasswordHash = hashed, Role = role };
-        await _uow.Repository<User>().AddAsync(user);
-        await _uow.SaveChangesAsync();
-        return user;
+        await _uow.BeginTransactionAsync();
+        try
+        {
+            var existing = await GetByEmailAsync(dto.Email);
+            if (existing is not null) throw new InvalidOperationException("Email already registered");
+
+            var hashed = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+            var user = new User { Email = dto.Email, Name = dto.Name, PasswordHash = hashed, Role = role };
+            await _uow.Repository<User>().AddAsync(user);
+            await _uow.SaveChangesAsync();
+            await _uow.CommitAsync();
+            return user;
+        }
+        catch
+        {
+            await _uow.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<User?> ValidateCredentialsAsync(string email, string password)
@@ -46,14 +58,15 @@ public class UserService : IUserService
         return true;
     }
 
-    public async Task<IEnumerable<User>> GetAllAsync() => await _uow.Repository<User>().GetAllAsync();
+    public async Task<IEnumerable<User>> GetAllAsync() => await _uow.Repository<User>().Query().ToListAsync();
 
     public async Task<User?> GetByIdAsync(int id) => await _uow.Repository<User>().GetByIdAsync(id);
 
     public async Task<User?> GetByEmailAsync(string email)
     {
-        var all = await _uow.Repository<User>().GetAllAsync();
-        return all.FirstOrDefault(u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase));
+        return await _uow.Repository<User>()
+            .Query()
+            .FirstOrDefaultAsync(u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase));
     }
 
     public async Task<bool> UpdateAsync(int id, User user)

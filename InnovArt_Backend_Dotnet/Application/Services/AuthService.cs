@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Linq;
 
 namespace InnovArt_Backend_Dotnet.Application.Services;
 
@@ -20,8 +21,10 @@ public class AuthService : IAuthService
 
     public User? ValidateCredentials(string email, string password)
     {
-        var users = _uow.Repository<User>().GetAllAsync().GetAwaiter().GetResult();
-        var user = users.FirstOrDefault(u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase));
+        var user = _uow.Repository<User>()
+            .Query()
+            .FirstOrDefault(u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase));
+
         if (user is null || string.IsNullOrEmpty(user.PasswordHash)) return null;
         var ok = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
         return ok ? user : null;

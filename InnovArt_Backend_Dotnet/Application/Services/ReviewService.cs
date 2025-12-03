@@ -1,5 +1,6 @@
 using InnovArt_Backend_Dotnet.Domain.Entities;
 using InnovArt_Backend_Dotnet.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,15 +31,23 @@ public class ReviewService : IReviewService
 
     public async Task<IEnumerable<Review>> GetAllAsync(int? productoId = null, int? clienteId = null, int? artesanoId = null)
     {
-        var all = (await _uow.Repository<Review>().GetAllAsync()).ToList();
-        if (productoId.HasValue) all = all.Where(r => r.ProductId == productoId.Value).ToList();
-        if (clienteId.HasValue) all = all.Where(r => r.UserId == clienteId.Value).ToList();
+        var query = _uow.Repository<Review>().Query();
+        if (productoId.HasValue) query = query.Where(r => r.ProductId == productoId.Value);
+        if (clienteId.HasValue) query = query.Where(r => r.UserId == clienteId.Value);
+
         if (artesanoId.HasValue)
         {
-            var products = (await _uow.Repository<Product>().GetAllAsync()).Where(p => p.UsuarioId == artesanoId.Value).Select(p => p.Id).ToHashSet();
-            all = all.Where(r => products.Contains(r.ProductId)).ToList();
+            var products = await _uow.Repository<Product>()
+                .Query()
+                .Where(p => p.UsuarioId == artesanoId.Value)
+                .Select(p => p.Id)
+                .ToListAsync();
+
+            var productIds = products.ToHashSet();
+            query = query.Where(r => productIds.Contains(r.ProductId));
         }
-        return all;
+
+        return await query.ToListAsync();
     }
 
     public async Task<Review?> GetByIdAsync(int id) => await _uow.Repository<Review>().GetByIdAsync(id);

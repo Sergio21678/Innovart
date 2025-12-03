@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using InnovArt_Backend_Dotnet.Application.Services;
-using System.Security.Claims;
-using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace InnovArt_Backend_Dotnet.Controllers;
 
@@ -11,23 +10,14 @@ namespace InnovArt_Backend_Dotnet.Controllers;
 [Authorize(Roles = "admin")]
 public class AdminController : ControllerBase
 {
-    private readonly IUserService _userService;
-    private readonly IProductService _productService;
-    private readonly IPedidoService _pedidoService;
-    private readonly IMensajeService _mensajeService;
+    private readonly IReportService _reportService;
     private readonly ILogger<AdminController> _logger;
 
     public AdminController(
-        IUserService userService,
-        IProductService productService,
-        IPedidoService pedidoService,
-        IMensajeService mensajeService,
+        IReportService reportService,
         ILogger<AdminController> logger)
     {
-        _userService = userService;
-        _productService = productService;
-        _pedidoService = pedidoService;
-        _mensajeService = mensajeService;
+        _reportService = reportService;
         _logger = logger;
     }
 
@@ -36,19 +26,7 @@ public class AdminController : ControllerBase
     {
         try
         {
-            var users = await _userService.GetAllAsync();
-            var products = await _productService.GetAllAsync();
-            var pedidos = await _pedidoService.GetAllAsync();
-            var mensajes = await _mensajeService.GetAllAsync();
-
-            var summary = new
-            {
-                usuarios = users.Count(),
-                productos = products.Count(),
-                pedidos = pedidos.Count(),
-                mensajes = mensajes.Count()
-            };
-
+            var summary = await _reportService.GetAdminSummaryAsync();
             return Ok(summary);
         }
         catch (Exception ex)

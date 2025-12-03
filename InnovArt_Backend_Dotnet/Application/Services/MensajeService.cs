@@ -1,5 +1,6 @@
 using InnovArt_Backend_Dotnet.Domain.Entities;
 using InnovArt_Backend_Dotnet.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,10 +31,10 @@ public class MensajeService : IMensajeService
 
     public async Task<IEnumerable<Mensaje>> GetAllAsync(int? fromUserId = null, int? toUserId = null)
     {
-        var all = (await _uow.Repository<Mensaje>().GetAllAsync()).ToList();
-        if (fromUserId.HasValue) all = all.Where(m => m.FromUserId == fromUserId.Value).ToList();
-        if (toUserId.HasValue) all = all.Where(m => m.ToUserId == toUserId.Value).ToList();
-        return all;
+        var query = _uow.Repository<Mensaje>().Query();
+        if (fromUserId.HasValue) query = query.Where(m => m.FromUserId == fromUserId.Value);
+        if (toUserId.HasValue) query = query.Where(m => m.ToUserId == toUserId.Value);
+        return await query.ToListAsync();
     }
 
     public async Task<Mensaje?> GetByIdAsync(int id) => await _uow.Repository<Mensaje>().GetByIdAsync(id);

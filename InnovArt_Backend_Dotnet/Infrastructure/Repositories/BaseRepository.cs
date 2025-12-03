@@ -1,7 +1,10 @@
 using InnovArt_Backend_Dotnet.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using InnovArt_Backend_Dotnet.Infrastructure.Data;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace InnovArt_Backend_Dotnet.Infrastructure.Repositories;
@@ -19,11 +22,16 @@ public class BaseRepository<T> : IRepository<T> where T : class
 
     public async Task AddAsync(T entity) => await _set.AddAsync(entity).AsTask();
 
-    public async Task<IEnumerable<T>> GetAllAsync() => await _set.ToListAsync();
+    public async Task<IEnumerable<T>> GetAllAsync() => await _set.AsNoTracking().ToListAsync();
 
     public async Task<T?> GetByIdAsync(int id) => await _set.FindAsync(id).AsTask();
+
+    public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate) =>
+        await _set.AsNoTracking().Where(predicate).ToListAsync();
 
     public void Remove(T entity) => _set.Remove(entity);
 
     public void Update(T entity) => _set.Update(entity);
+
+    public IQueryable<T> Query() => _set.AsNoTracking();
 }

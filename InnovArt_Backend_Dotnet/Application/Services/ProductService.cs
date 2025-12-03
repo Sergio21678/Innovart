@@ -1,5 +1,6 @@
 using InnovArt_Backend_Dotnet.Domain.Entities;
 using InnovArt_Backend_Dotnet.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,10 +31,12 @@ public class ProductService : IProductService
 
     public async Task<IEnumerable<Product>> GetAllAsync(int? usuarioId = null)
     {
-        var all = await _uow.Repository<Product>().GetAllAsync();
+        var query = _uow.Repository<Product>().Query();
         if (usuarioId.HasValue)
-            return all.Where(p => p.UsuarioId == usuarioId.Value).ToList();
-        return all;
+        {
+            query = query.Where(p => p.UsuarioId == usuarioId.Value);
+        }
+        return await query.ToListAsync();
     }
 
     public async Task<Product?> GetByIdAsync(int id) => await _uow.Repository<Product>().GetByIdAsync(id);
