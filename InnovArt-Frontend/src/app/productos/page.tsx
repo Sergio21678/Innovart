@@ -1,6 +1,5 @@
 'use client';
 
-// 1. IMPORTAR SUSPENSE
 import { useEffect, useMemo, useState, Suspense } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
@@ -12,15 +11,14 @@ import StatusMessage from '../../components/StatusMessage';
 const CATEGORIES = ['Ceramica', 'Textiles', 'Madera', 'Joyeria', 'Pintura', 'Cuero', 'Otros'];
 const normalize = (s: string | null | undefined) => (s || '').toString().trim().toLowerCase();
 
-// 2. CAMBIAMOS EL NOMBRE Y QUITAMOS "export default"
 function ContenidoProductos() {
   const [productos, setProductos] = useState<any[]>([]);
   const [categoria, setCategoria] = useState('');
   const [ubicacion, setUbicacion] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState<string | null>(null);
   
-  // Aquí es donde ocurría el error antes
   const searchParams = useSearchParams();
 
   const fetchProductos = async () => {
@@ -53,7 +51,27 @@ function ContenidoProductos() {
   useEffect(() => { 
     const catFromUrl = searchParams.get('categoria');
     if (catFromUrl) setCategoria(catFromUrl);
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        setRole(parsed.role || parsed.rol || null);
+      } catch { setRole(null); }
+    }
+    const onAuthChanged = () => {
+      const updated = localStorage.getItem('user');
+      if (updated) {
+        try {
+          const parsed = JSON.parse(updated);
+          setRole(parsed.role || parsed.rol || null);
+        } catch { setRole(null); }
+      } else {
+        setRole(null);
+      }
+    };
+    window.addEventListener('auth-changed', onAuthChanged as EventListener);
     fetchProductos(); 
+    return () => window.removeEventListener('auth-changed', onAuthChanged as EventListener);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const productosFiltrados = useMemo(() => {
@@ -71,12 +89,14 @@ function ContenidoProductos() {
           <h2 className="text-3xl font-bold text-blue-900 flex items-center gap-3 justify-center sm:justify-start">
             <FaBoxOpen className="text-blue-700" /> Productos disponibles
           </h2>
-          <Link
-            href="/productos/crear"
-            className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded font-semibold flex items-center gap-2 justify-center w-full sm:w-auto"
-          >
-            <FaPlus /> Nuevo producto
-          </Link>
+          {role && role !== 'cliente' && (
+            <Link
+              href="/productos/crear"
+              className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded font-semibold flex items-center gap-2 justify-center w-full sm:w-auto"
+            >
+              <FaPlus /> Nuevo producto
+            </Link>
+          )}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 items-center">
           <div className="flex gap-2 items-center w-full">
@@ -155,7 +175,6 @@ function ContenidoProductos() {
   );
 }
 
-// 3. NUEVO COMPONENTE QUE ENVUELVE (ESTE SE EXPORTA)
 export default function ProductosPage() {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-blue-700 text-xl font-bold">Cargando productos...</div>}>
@@ -163,3 +182,4 @@ export default function ProductosPage() {
     </Suspense>
   );
 }
+

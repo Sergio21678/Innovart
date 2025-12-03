@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
@@ -16,13 +16,40 @@ export default function CrearProductoPage() {
   const [ubicacion, setUbicacion] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
-  const [file, setFile] = useState<File | null>(null)
+  const [role, setRole] = useState<string | null>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    const storedUser = localStorage.getItem('user')
+    if (!token || !storedUser) {
+      setError('Debes iniciar sesión como artesano para crear productos')
+      router.replace('/login')
+      return
+    }
+    try {
+      const parsed = JSON.parse(storedUser)
+      const detectedRole = parsed.role || parsed.rol
+      setRole(detectedRole)
+      if (detectedRole === 'cliente') {
+        setError('Tu rol es cliente. Solo artesanos pueden crear productos.')
+        setTimeout(() => router.replace('/productos'), 1200)
+      }
+    } catch {
+      setRole(null)
+      setError('No se pudo leer tu sesión. Inicia sesión nuevamente.')
+      router.replace('/login')
+    }
+  }, [router])
 
   const handleCrear = async (e: FormEvent) => {
     e.preventDefault()
     setError(null)
     setMsg(null)
+    if (role === 'cliente') {
+      setError('Solo artesanos pueden crear productos.')
+      return
+    }
     try {
       const token = localStorage.getItem('token')
       if (!token) {
@@ -61,6 +88,9 @@ export default function CrearProductoPage() {
           <FaPlus className="text-blue-700" /> Crear nuevo producto
         </h2>
         <div className="bg-white/95 rounded-xl shadow p-6">
+          {role === 'cliente' && (
+            <div className="text-red-600 mb-4">Tu rol es cliente. No puedes crear productos.</div>
+          )}
           <form className="flex flex-col gap-3" onSubmit={handleCrear}>
             <div className="flex gap-2 items-center">
               <FaBoxOpen className="text-blue-400" />
@@ -71,7 +101,7 @@ export default function CrearProductoPage() {
               <input
                 type="file"
                 accept="image/*"
-                onChange={e => setFile((e.target.files && e.target.files[0]) || null)}
+                onChange={e => (e.target.files && e.target.files[0])}
                 className="border rounded px-2 py-1 flex-1"
               />
             </div>
@@ -91,7 +121,7 @@ export default function CrearProductoPage() {
               <input placeholder="Precio" type="number" value={precio} onChange={(e) => setPrecio(e.target.value)} className="border rounded px-2 py-1 flex-1" min={0} required />
             </div>
             <textarea placeholder="Descripcion" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} className="border rounded px-2 py-1" rows={3} required />
-            <button type="submit" className="bg-blue-700 text-white px-4 py-2 rounded font-semibold flex items-center gap-2 mt-2">
+            <button type="submit" disabled={role === 'cliente'} className="bg-blue-700 text-white px-4 py-2 rounded font-semibold flex items-center gap-2 mt-2 disabled:opacity-60 disabled:cursor-not-allowed">
               <FaPlus /> Crear producto
             </button>
           </form>
@@ -102,3 +132,4 @@ export default function CrearProductoPage() {
     </div>
   )
 }
+
