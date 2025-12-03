@@ -1,5 +1,7 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+
+// 1. IMPORTAR SUSPENSE
+import { useEffect, useMemo, useState, Suspense } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
 import { FaSearch, FaPlus, FaBoxOpen, FaTag, FaMapMarkerAlt } from 'react-icons/fa';
@@ -10,12 +12,15 @@ import StatusMessage from '../../components/StatusMessage';
 const CATEGORIES = ['Ceramica', 'Textiles', 'Madera', 'Joyeria', 'Pintura', 'Cuero', 'Otros'];
 const normalize = (s: string | null | undefined) => (s || '').toString().trim().toLowerCase();
 
-export default function Productos() {
+// 2. CAMBIAMOS EL NOMBRE Y QUITAMOS "export default"
+function ContenidoProductos() {
   const [productos, setProductos] = useState<any[]>([]);
   const [categoria, setCategoria] = useState('');
   const [ubicacion, setUbicacion] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Aquí es donde ocurría el error antes
   const searchParams = useSearchParams();
 
   const fetchProductos = async () => {
@@ -49,7 +54,7 @@ export default function Productos() {
     const catFromUrl = searchParams.get('categoria');
     if (catFromUrl) setCategoria(catFromUrl);
     fetchProductos(); 
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const productosFiltrados = useMemo(() => {
     return productos.filter(p => {
@@ -121,5 +126,14 @@ export default function Productos() {
         </StatusMessage>
       </div>
     </div>
+  );
+}
+
+// 3. NUEVO COMPONENTE QUE ENVUELVE (ESTE SE EXPORTA)
+export default function ProductosPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-blue-700 text-xl font-bold">Cargando productos...</div>}>
+      <ContenidoProductos />
+    </Suspense>
   );
 }
