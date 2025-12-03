@@ -10,7 +10,7 @@ const normalizeUser = (u: any) => ({
   id: u?.id ?? u?.Id,
   email: u?.email ?? u?.Email,
   name: u?.name ?? u?.Name,
-  role: u?.role ?? u?.Role
+  role: (u?.role ?? u?.Role ?? '').toString().toLowerCase()
 })
 
 export default function LoginPage() {

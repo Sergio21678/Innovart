@@ -29,7 +29,7 @@ export default function CrearProductoPage() {
     }
     try {
       const parsed = JSON.parse(storedUser)
-      const detectedRole = parsed.role || parsed.rol
+      const detectedRole = (parsed.role || parsed.rol || '').toString().toLowerCase()
       setRole(detectedRole)
       if (detectedRole === 'cliente') {
         setError('Tu rol es cliente. Solo artesanos pueden crear productos.')
@@ -132,4 +132,3 @@ export default function CrearProductoPage() {
     </div>
   )
 }
-

@@ -55,7 +55,8 @@ function ContenidoProductos() {
     if (storedUser) {
       try {
         const parsed = JSON.parse(storedUser);
-        setRole(parsed.role || parsed.rol || null);
+        const normalizedRole = (parsed.role || parsed.rol || '').toString().toLowerCase() || null;
+        setRole(normalizedRole);
       } catch { setRole(null); }
     }
     const onAuthChanged = () => {
@@ -63,7 +64,8 @@ function ContenidoProductos() {
       if (updated) {
         try {
           const parsed = JSON.parse(updated);
-          setRole(parsed.role || parsed.rol || null);
+          const normalizedRole = (parsed.role || parsed.rol || '').toString().toLowerCase() || null;
+          setRole(normalizedRole);
         } catch { setRole(null); }
       } else {
         setRole(null);
@@ -182,4 +184,3 @@ export default function ProductosPage() {
     </Suspense>
   );
 }
-

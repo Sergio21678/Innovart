@@ -109,7 +109,12 @@ export default function EditarPerfil() {
         <input name="name" value={user.name || ''} onChange={handleChange} placeholder="Nombre completo" className="border px-2 py-2 rounded" />
         <div className="flex flex-col">
           <label className="text-sm text-gray-600">Correo (solo lectura)</label>
-          <input value={user.email || ''} readOnly className="border px-2 py-2 rounded bg-gray-100 cursor-not-allowed" />
+          <input
+            value={user.email || ''}
+            readOnly
+            disabled
+            className="border px-2 py-2 rounded bg-gray-100 cursor-not-allowed text-gray-600"
+          />
         </div>
         <div className="flex items-center justify-between bg-blue-50 text-blue-900 px-3 py-2 rounded">
           <span className="font-semibold">Rol</span>
@@ -136,4 +141,3 @@ export default function EditarPerfil() {
     </div>
   )
 }
-

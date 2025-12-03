@@ -24,7 +24,7 @@ export default function PerfilPage() {
         id: user.id ?? user.Id,
         email: user.email ?? user.Email,
         name: user.name ?? user.Name,
-        role: user.role ?? user.Role
+        role: (user.role ?? user.Role ?? '').toString().toLowerCase()
       }
       localStorage.setItem('user', JSON.stringify(normalized))
       window.dispatchEvent(new Event('auth-changed'))
