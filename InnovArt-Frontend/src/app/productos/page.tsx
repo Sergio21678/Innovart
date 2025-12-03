@@ -67,57 +67,83 @@ function ContenidoProductos() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-sky-100 to-blue-200">
       <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold text-blue-900 flex items-center gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-6 text-center sm:text-left">
+          <h2 className="text-3xl font-bold text-blue-900 flex items-center gap-3 justify-center sm:justify-start">
             <FaBoxOpen className="text-blue-700" /> Productos disponibles
           </h2>
-          <Link href="/productos/crear" className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded font-semibold flex items-center gap-2">
+          <Link
+            href="/productos/crear"
+            className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded font-semibold flex items-center gap-2 justify-center w-full sm:w-auto"
+          >
             <FaPlus /> Nuevo producto
           </Link>
         </div>
-        <div className="flex flex-col md:flex-row gap-4 mb-8 items-center">
-          <div className="flex gap-2 items-center">
-            <FaTag className="text-blue-400" />
-            <select value={categoria} onChange={(e) => setCategoria(e.target.value)} className="border rounded px-2 py-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 items-center">
+          <div className="flex gap-2 items-center w-full">
+            <FaTag className="text-blue-400 shrink-0" />
+            <select
+              value={categoria}
+              onChange={(e) => setCategoria(e.target.value)}
+              className="border rounded px-3 py-2 w-full bg-white"
+            >
               <option value="">Todas las categorias</option>
               {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
             </select>
           </div>
-          <div className="flex gap-2 items-center">
-            <FaMapMarkerAlt className="text-blue-400" />
+          <div className="flex gap-2 items-center w-full">
+            <FaMapMarkerAlt className="text-blue-400 shrink-0" />
             <input
               type="text"
               placeholder="Ubicacion"
               value={ubicacion}
               onChange={(e) => setUbicacion(e.target.value)}
-              className="border rounded px-2 py-1"
+              className="border rounded px-3 py-2 w-full"
             />
           </div>
-          <button onClick={fetchProductos} className="bg-blue-700 text-white px-4 py-1 rounded flex items-center gap-2">
+          <button
+            onClick={fetchProductos}
+            className="bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2 justify-center w-full lg:w-auto"
+          >
             <FaSearch /> Actualizar
           </button>
-          <Link href="/categorias" className="text-blue-700 underline text-sm">Ver catalogo de categorias</Link>
+          <Link href="/categorias" className="text-blue-700 underline text-sm text-center w-full lg:w-auto">
+            Ver catalogo de categorias
+          </Link>
         </div>
 
         <StatusMessage loading={loading} error={error}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
             {productosFiltrados.length === 0 ? (
               <div className="col-span-full text-blue-700 text-center py-8">No hay productos para mostrar.</div>
             ) : (
               <>
                 {productosFiltrados.map((p) => (
-                  <div key={p.id} className="bg-white rounded-xl shadow-lg p-4 flex flex-col items-center transition-transform transform hover:scale-105">
-                    <img src={p.imagen || '/default-artesania.png'} alt={p.titulo} className="h-32 w-full object-cover rounded mb-2" />
-                    <div className="font-bold text-blue-900 text-lg">{p.titulo}</div>
-                    <div className="text-blue-800 text-sm mb-1">{p.descripcion}</div>
+                  <div
+                    key={p.id}
+                    className="bg-white rounded-xl shadow-lg p-4 flex flex-col transition-transform transform hover:scale-105 h-full"
+                  >
+                    <div className="aspect-[4/3] w-full overflow-hidden rounded-lg bg-slate-100 mb-3">
+                      <img
+                        src={p.imagen || '/default-artesania.png'}
+                        alt={p.titulo}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="font-bold text-blue-900 text-lg mb-1">{p.titulo}</div>
+                    <div className="text-blue-800 text-sm mb-2 max-h-12 overflow-hidden">{p.descripcion}</div>
                     <div className="flex items-center gap-2 text-blue-700 mb-1">
                       <FaTag /> <span>{p.categoria || 'Sin categoria'}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-blue-700 mb-1">
+                    <div className="flex items-center gap-2 text-blue-700 mb-3">
                       <FaMapMarkerAlt /> <span>{p.ubicacion || 'Sin ubicacion'}</span>
                     </div>
                     <div className="text-blue-900 font-bold text-lg mb-2">${p.precio}</div>
-                    <Link href={`/productos/${p.id}`} className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-1 rounded font-semibold transition">Ver mas</Link>
+                    <Link
+                      href={`/productos/${p.id}`}
+                      className="mt-auto bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded font-semibold transition text-center"
+                    >
+                      Ver mas
+                    </Link>
                   </div>
                 ))}
               </>
