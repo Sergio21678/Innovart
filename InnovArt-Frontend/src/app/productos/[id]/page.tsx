@@ -21,6 +21,8 @@ export default function ProductoDetalle() {
   const [comentario, setComentario] = useState('')
   const [msg, setMsg] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [mensajeArtesano, setMensajeArtesano] = useState('')
+  const [msgContacto, setMsgContacto] = useState<string | null>(null)
 
   useEffect(() => {
     if (id) {
@@ -48,7 +50,19 @@ export default function ProductoDetalle() {
           if (producto.usuarioId) {
             try {
               const artesanoRes = await axios.get(`${API_URL}/users/${producto.usuarioId}`)
-              setArtesano(artesanoRes.data)
+              const a = artesanoRes.data
+              setArtesano({
+                id: a.id ?? a.Id,
+                nombre: a.name ?? a.Nombre ?? a.nombre_completo,
+                descripcion: a.descripcion ?? a.Descripcion ?? '',
+                foto: a.fotoPerfil ?? a.foto_perfil ?? '',
+                ciudad: a.ciudad ?? '',
+                pais: a.pais ?? '',
+                especialidades: a.especialidades ?? '',
+                calificacionPromedio: a.calificacion_promedio ?? 0,
+                totalResenas: a.total_reseñas ?? a.total_reseñas ?? 0,
+                redes: a.redes_sociales
+              })
             } catch (err) {
               console.error('Error loading artesano:', err)
             }
@@ -188,11 +202,9 @@ export default function ProductoDetalle() {
           <div className="flex gap-4 mt-2">
             <button className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded-full font-semibold transition">Añadir al carrito</button>
             {artesano && (
-              <Link href={`/mensajes?destinatarioId=${artesano.id}`}>
-                <button className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-semibold flex items-center gap-2">
-                  <FaEnvelope /> Contactar artesano
-                </button>
-              </Link>
+              <a href="#contacto-artesano" className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full font-semibold flex items-center gap-2">
+                <FaEnvelope /> Contactar artesano
+              </a>
             )}
           </div>
         </div>
@@ -217,21 +229,31 @@ export default function ProductoDetalle() {
           {/* Información del artesano */}
           {artesano && (
             <div className="bg-white/90 rounded-xl shadow p-6 flex flex-col items-center">
-              <img src={artesano.foto_perfil || '/default-profile.png'} alt={artesano.nombre_completo} className="h-24 w-24 rounded-full object-cover border-4 border-blue-200 mb-2" />
-              <h3 className="text-lg font-bold text-blue-900">{artesano.nombre_completo}</h3>
-              <div className="text-blue-800 mb-1">{artesano.descripcion}</div>
+              <img src={artesano.foto || '/default-profile.png'} alt={artesano.nombre} className="h-24 w-24 rounded-full object-cover border-4 border-blue-200 mb-2" />
+              <h3 className="text-lg font-bold text-blue-900">{artesano.nombre}</h3>
+              <div className="text-blue-700 text-sm mb-1">
+                {[artesano.ciudad, artesano.pais].filter(Boolean).join(', ') || 'Sin ubicación'}
+              </div>
+              <div className="text-blue-800 mb-1 text-center">{artesano.descripcion || 'Sin descripción'}</div>
               <div className="flex items-center gap-2 mb-1">
                 <FaStar className="text-yellow-500" />
-                <span className="font-semibold">{typeof artesano.calificacion_promedio === 'number'
-                  ? artesano.calificacion_promedio.toFixed(1)
+                <span className="font-semibold">{typeof artesano.calificacionPromedio === 'number'
+                  ? artesano.calificacionPromedio.toFixed(1)
                   : '0.0'}</span>
-                <span className="text-xs text-blue-700">({artesano.total_reseñas || 0} reseñas)</span>
+                <span className="text-xs text-blue-700">({artesano.totalResenas || 0} reseñas)</span>
               </div>
+              {artesano.especialidades && (
+                <div className="flex flex-wrap gap-1 mt-1 text-xs text-blue-700 justify-center">
+                  {artesano.especialidades.split(',').map((e: string, i: number) => (
+                    <span key={i} className="bg-blue-100 px-2 py-0.5 rounded">{e.trim()}</span>
+                  ))}
+                </div>
+              )}
               <div className="flex gap-2 mt-2">
                 <Link href={`/artesanos/${artesano.id}`} className="underline text-blue-700 font-semibold">Ver perfil completo</Link>
-                {artesano.redes_sociales && (() => {
+                {artesano.redes && (() => {
                   let redes = {}
-                  try { redes = JSON.parse(artesano.redes_sociales) } catch {}
+                  try { redes = JSON.parse(artesano.redes) } catch {}
                   return (
                     <>
                       {(redes as any).facebook && <a href={(redes as any).facebook} target="_blank" rel="noopener noreferrer" className="ml-2 text-blue-700 underline">Facebook</a>}
@@ -277,15 +299,50 @@ export default function ProductoDetalle() {
         </ul>
       </div>
       {/* Contacto/chat */}
-      <div className="bg-white/90 rounded-xl shadow p-6 mb-8 flex flex-col md:flex-row gap-6 items-center">
+      <div id="contacto-artesano" className="bg-white/90 rounded-xl shadow p-6 mb-8 flex flex-col md:flex-row gap-6 items-start">
         <div className="flex-1">
           <h2 className="text-xl font-bold text-blue-900 mb-2">¿Tienes dudas o quieres personalizar tu pedido?</h2>
+          <p className="text-blue-800 mb-3">Envía un mensaje directo al artesano.</p>
           {artesano && (
-            <Link href={`/mensajes?destinatarioId=${artesano.id}`}>
-              <button className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded-full font-semibold flex items-center gap-2 mt-2">
-                <FaEnvelope /> Enviar mensaje al artesano
+            <form
+              className="flex flex-col gap-3"
+              onSubmit={async (e) => {
+                e.preventDefault()
+                setMsgContacto(null)
+                setError(null)
+                const token = localStorage.getItem('token')
+                const user = JSON.parse(localStorage.getItem('user') || '{}')
+                if (!token || !user?.id) {
+                  setError('Debes iniciar sesión para enviar mensajes')
+                  return
+                }
+                try {
+                  await axios.post(`${API_URL}/mensajes`, {
+                    fromUserId: user.id,
+                    toUserId: artesano.id,
+                    content: mensajeArtesano || 'Hola, estoy interesado en tu producto.'
+                  }, { headers: { Authorization: `Bearer ${token}` } })
+                  setMsgContacto('Mensaje enviado al artesano')
+                  setMensajeArtesano('')
+                } catch (err: any) {
+                  console.error('Error enviando mensaje', err)
+                  setError(err.response?.data?.error || 'No se pudo enviar el mensaje')
+                }
+              }}
+            >
+              <textarea
+                value={mensajeArtesano}
+                onChange={e => setMensajeArtesano(e.target.value)}
+                placeholder="Escribe tu mensaje..."
+                className="w-full p-2 border border-blue-200 rounded-md resize-none h-24"
+                required
+              />
+              <button type="submit" className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded-full font-semibold flex items-center gap-2 mt-1">
+                <FaEnvelope /> Enviar mensaje
               </button>
-            </Link>
+              {msgContacto && <div className="text-green-700">{msgContacto}</div>}
+              {error && <div className="text-red-700">{error}</div>}
+            </form>
           )}
         </div>
       </div>
