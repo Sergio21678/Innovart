@@ -64,9 +64,10 @@ public class UserService : IUserService
 
     public async Task<User?> GetByEmailAsync(string email)
     {
+        var normalized = email.Trim().ToLower();
         return await _uow.Repository<User>()
             .Query()
-            .FirstOrDefaultAsync(u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefaultAsync(u => u.Email != null && u.Email.ToLower() == normalized);
     }
 
     public async Task<bool> UpdateAsync(int id, User user)

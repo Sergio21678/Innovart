@@ -21,9 +21,10 @@ public class AuthService : IAuthService
 
     public User? ValidateCredentials(string email, string password)
     {
+        var normalized = email.Trim().ToLower();
         var user = _uow.Repository<User>()
             .Query()
-            .FirstOrDefault(u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefault(u => u.Email != null && u.Email.ToLower() == normalized);
 
         if (user is null || string.IsNullOrEmpty(user.PasswordHash)) return null;
         var ok = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
