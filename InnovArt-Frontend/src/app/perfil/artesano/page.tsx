@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
 import Link from 'next/link'
-import { FaUserTie, FaStar, FaBoxOpen, FaEdit, FaSignOutAlt, FaPlus, FaStore } from 'react-icons/fa'
+import { FaUserTie, FaStar, FaBoxOpen, FaEdit, FaSignOutAlt, FaPlus, FaStore, FaKey } from 'react-icons/fa'
 import { API_URL } from '@/services/api'
 
 export default function PerfilArtesano() {
