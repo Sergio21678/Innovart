@@ -59,6 +59,21 @@ function ContenidoProductos() {
         setRole(normalizedRole);
       } catch { setRole(null); }
     }
+    const token = localStorage.getItem('token');
+    if (token) {
+      axios.get(`${API_URL}/users/me`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => {
+          const normalizedRole = (res.data.role ?? res.data.rol ?? '').toString().toLowerCase() || null;
+          setRole(normalizedRole);
+          localStorage.setItem('user', JSON.stringify({
+            id: res.data.id ?? res.data.Id,
+            email: res.data.email ?? res.data.Email,
+            name: res.data.name ?? res.data.Name,
+            role: normalizedRole
+          }));
+        })
+        .catch(() => {});
+    }
     const onAuthChanged = () => {
       const updated = localStorage.getItem('user');
       if (updated) {

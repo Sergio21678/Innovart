@@ -47,31 +47,33 @@ export default function ArtesanoDetallePage() {
       setLoading(true);
       setError(null);
       try {
-        const [userRes, prodRes] = await Promise.all([
-          axios.get(`${API_URL}/users/${artesanoId}`),
-          axios.get(`${API_URL}/products?usuarioId=${artesanoId}`)
-        ]);
-
+        const userRes = await axios.get(`${API_URL}/users/${artesanoId}`);
         setArtesano({
           id: userRes.data.id ?? userRes.data.Id,
           name: userRes.data.name ?? userRes.data.Nombre ?? userRes.data.nombre_completo,
           descripcion: userRes.data.descripcion ?? userRes.data.Descripcion,
-          especialidades: userRes.data.especialidades,
-          ciudad: userRes.data.ciudad,
-          pais: userRes.data.pais,
+          especialidades: userRes.data.especialidades ?? '',
+          ciudad: userRes.data.ciudad ?? '',
+          pais: userRes.data.pais ?? '',
           fotoPerfil: userRes.data.fotoPerfil ?? userRes.data.foto_perfil
         });
-
-        const mapped = (prodRes.data || []).map((p: any) => ({
-          id: p.id,
-          title: p.title || p.titulo,
-          description: p.description || p.descripcion,
-          imageUrl: p.imageUrl || p.imagen || '/default-artesania.png',
-          price: p.price ?? 0,
-          category: p.category || p.categoria,
-          location: p.location || p.ubicacion
-        }));
-        setProductos(mapped);
+        // productos (no bloquear vista si falla)
+        try {
+          const prodRes = await axios.get(`${API_URL}/products?usuarioId=${artesanoId}`);
+          const mapped = (prodRes.data || []).map((p: any) => ({
+            id: p.id,
+            title: p.title || p.titulo,
+            description: p.description || p.descripcion,
+            imageUrl: p.imageUrl || p.imagen || '/default-artesania.png',
+            price: p.price ?? 0,
+            category: p.category || p.categoria,
+            location: p.location || p.ubicacion
+          }));
+          setProductos(mapped);
+        } catch (prodErr) {
+          console.warn('No se pudieron cargar productos del artesano', prodErr);
+          setProductos([]);
+        }
       } catch (err: any) {
         console.error('Error loading artesano:', err);
         setError('No se pudo cargar la información del artesano.');
@@ -148,4 +150,3 @@ export default function ArtesanoDetallePage() {
     </div>
   );
 }
-

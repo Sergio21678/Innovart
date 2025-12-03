@@ -61,6 +61,10 @@ public class ProductsController : ControllerBase
 
         try
         {
+            var role = User.FindFirst(ClaimTypes.Role)?.Value?.ToLower() ?? string.Empty;
+            if (role != "artesano" && role != "admin")
+                return Forbid();
+
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var product = new Product 
             { 
@@ -94,6 +98,10 @@ public class ProductsController : ControllerBase
 
         try
         {
+            var role = User.FindFirst(ClaimTypes.Role)?.Value?.ToLower() ?? string.Empty;
+            if (role != "artesano" && role != "admin")
+                return Forbid();
+
             var updated = new Product 
             { 
                 Title = dto.Title, 
@@ -122,6 +130,10 @@ public class ProductsController : ControllerBase
 
         try
         {
+            var role = User.FindFirst(ClaimTypes.Role)?.Value?.ToLower() ?? string.Empty;
+            if (role != "artesano" && role != "admin")
+                return Forbid();
+
             var ok = await _svc.DeleteAsync(id);
             return ok ? NoContent() : NotFound(new { error = "Product not found" });
         }
@@ -132,4 +144,3 @@ public class ProductsController : ControllerBase
         }
     }
 }
-
